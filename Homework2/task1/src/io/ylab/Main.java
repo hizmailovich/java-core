@@ -1,7 +1,9 @@
 package io.ylab;
 
 import java.util.*;
-import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.counting;
+import static java.util.stream.Collectors.groupingBy;
 
 public class Main {
 
@@ -52,25 +54,20 @@ public class Main {
     };
 
     public static void main(String[] args) {
-        Map<String, Integer> persons = new TreeMap<>();
-
         System.out.println("Raw data:\n");
 
         Arrays.stream(RAW_DATA)
-                .peek(person -> persons.put(person.name, person.id))
                 .forEach(person -> System.out.println(person.id + " - " + person.name));
 
         System.out.println("\n**************************************************\n");
         System.out.println("Duplicate filtered, grouped by name, sorted by name and id:\n");
 
-        persons.entrySet().stream()
-                .peek(person -> {
-                    int count = Collections.frequency(Arrays.stream(RAW_DATA)
-                            .distinct()
-                            .map(Person::getName)
-                            .collect(Collectors.toList()), person.getKey());
-                    person.setValue(count);
-                })
-                .forEach(person -> System.out.println("Key: " + person.getKey() + "\nValue:" + person.getValue()));
+        Map<String, Long> persons = Arrays.stream(RAW_DATA)
+                .distinct()
+                .filter(person -> person.getName() != null)
+                .sorted(Comparator.comparingInt(Person::getId))
+                .collect(groupingBy(Person::getName, counting()));
+
+        persons.forEach((key, value) -> System.out.println("Key: " + key + "\nValue: " + value));
     }
 }
